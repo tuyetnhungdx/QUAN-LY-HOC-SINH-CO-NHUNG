@@ -475,7 +475,7 @@ Võ Minh Khang,10C2`;
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-[#17324D]">
-              Quản lý học sinh
+              Nhập danh sách học sinh
             </h1>
             <p className="text-xs text-[#64748B]">
               Danh sách học sinh các lớp do giáo viên phụ trách giảng dạy và chủ nhiệm

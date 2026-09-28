@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'students' as TabId,
-      name: 'Quản lý học sinh',
+      name: 'Nhập danh sách học sinh',
       icon: Users,
       badge: null,
     },

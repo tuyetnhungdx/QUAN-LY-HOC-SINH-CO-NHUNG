@@ -1,47 +1,116 @@
 import React, { useState } from 'react';
 import { SchoolLogo } from './SchoolLogo';
 import { SchoolCampusIllustration } from './SchoolCampusIllustration';
-import { Eye, EyeOff, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, HelpCircle } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  User,
+  ArrowRight,
+  CheckCircle2,
+  ShieldCheck,
+  HelpCircle,
+  GraduationCap,
+  Sparkles,
+  BookOpen,
+} from 'lucide-react';
+import { Student, Classroom } from '../types';
+import { initialStudents, initialClasses } from '../data/mockData';
 
 interface LoginScreenProps {
-  onLoginSuccess: (role: string, username: string) => void;
+  onLoginSuccess: (role: string, username: string, studentId?: string) => void;
+  students?: Student[];
+  classes?: Classroom[];
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('gv.nguyenvanan');
-  const [password, setPassword] = useState('Thpt@NguyenDuc2025');
+export const LoginScreen: React.FC<LoginScreenProps> = ({
+  onLoginSuccess,
+  students = initialStudents,
+  classes = initialClasses,
+}) => {
+  const [role, setRole] = useState<'teacher' | 'student'>('teacher');
+  const [username, setUsername] = useState('nhung.tran');
+  const [password, setPassword] = useState('CoNhung@2026');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [role, setRole] = useState<'teacher' | 'student'>('teacher');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Student specific selector state
+  const [studentSelectClass, setStudentSelectClass] = useState<string>('12A1');
+  const [studentSelectId, setStudentSelectId] = useState<string>('hs_01');
+  const [studentLoginMethod, setStudentLoginMethod] = useState<'select' | 'input'>('select');
+
+  // Forgot password modal
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
 
+  // Available students in selected class
+  const classStudents = students.filter((s) => s.className === studentSelectClass);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
-      return;
-    }
-    setError('');
-    setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      onLoginSuccess(role, username);
-    }, 600);
+    if (role === 'teacher') {
+      if (!username.trim() || !password.trim()) {
+        setError('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu giáo viên.');
+        return;
+      }
+      setError('');
+      setLoading(true);
+
+      setTimeout(() => {
+        setLoading(false);
+        onLoginSuccess('teacher', username);
+      }, 500);
+    } else {
+      // Student login
+      if (studentLoginMethod === 'select') {
+        const found = students.find((s) => s.id === studentSelectId) || classStudents[0] || students[0];
+        if (!found) {
+          setError('Vui lòng chọn học sinh.');
+          return;
+        }
+        setError('');
+        setLoading(true);
+
+        setTimeout(() => {
+          setLoading(false);
+          onLoginSuccess('student', found.name, found.id);
+        }, 500);
+      } else {
+        if (!username.trim()) {
+          setError('Vui lòng nhập họ và tên hoặc tài khoản học sinh.');
+          return;
+        }
+        const matched = students.find(
+          (s) => s.name.toLowerCase().includes(username.toLowerCase())
+        );
+        setError('');
+        setLoading(true);
+
+        setTimeout(() => {
+          setLoading(false);
+          onLoginSuccess('student', username, matched?.id || students[0]?.id);
+        }, 500);
+      }
+    }
   };
 
-  const fillQuickDemo = (demoRole: 'teacher' | 'student') => {
+  const fillQuickDemo = (demoRole: 'teacher' | 'student', studentIndex = 0) => {
     setRole(demoRole);
     if (demoRole === 'teacher') {
-      setUsername('gv.nguyenvanan');
-      setPassword('Thpt@NguyenDuc2025');
+      setUsername('nhung.tran');
+      setPassword('CoNhung@2026');
     } else {
-      setUsername('hs.nguyenhoangnam');
-      setPassword('HocSinh@2025');
+      const targetStudent = students[studentIndex] || students[0];
+      if (targetStudent) {
+        setStudentSelectClass(targetStudent.className);
+        setStudentSelectId(targetStudent.id);
+        setUsername(targetStudent.name);
+        setPassword('123456');
+      }
     }
     setError('');
   };
@@ -79,7 +148,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </div>
 
             <p className="text-xs md:text-sm text-blue-100 leading-relaxed max-w-md hidden md:block">
-              Hệ thống quản lý giáo dục trực tuyến toàn diện: cập nhật điểm số theo Thông tư Bộ GD&ĐT, điểm danh chuyên cần tức thời và trợ lý sư phạm AI phân tích học lực.
+              Hệ thống tra cứu điểm số, chuyên cần và cổng link ôn tập đề thi trực tuyến (Azota, Quizizz, Drive...) Trường THPT Nguyễn Dục.
             </p>
           </div>
 
@@ -91,16 +160,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           {/* Footer Highlights */}
           <div className="z-10 pt-4 border-t border-white/15 grid grid-cols-3 gap-2 text-center text-xs">
             <div className="p-2 rounded-lg bg-white/5">
-              <p className="font-bold text-base text-white">100%</p>
-              <p className="text-blue-200 text-[11px]">Chuẩn TT22</p>
+              <p className="font-bold text-base text-white">2026-2027</p>
+              <p className="text-blue-200 text-[11px]">Năm học mới</p>
             </div>
             <div className="p-2 rounded-lg bg-white/5">
-              <p className="font-bold text-base text-white">4 Lớp</p>
-              <p className="text-blue-200 text-[11px]">Giảng dạy</p>
+              <p className="font-bold text-base text-white">Tuần 4</p>
+              <p className="text-blue-200 text-[11px]">Học kỳ I</p>
             </div>
             <div className="p-2 rounded-lg bg-white/5">
-              <p className="font-bold text-base text-white">AI</p>
-              <p className="text-blue-200 text-[11px]">Sư phạm số</p>
+              <p className="font-bold text-base text-white">Cô Nhung</p>
+              <p className="text-blue-200 text-[11px]">Môn Toán</p>
             </div>
           </div>
         </div>
@@ -114,7 +183,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 Đăng nhập
               </h2>
               <p className="text-sm text-[#64748B] mt-1">
-                Chào mừng quý Thầy/Cô và Học sinh trở lại cổng thông tin học tập
+                {role === 'teacher'
+                  ? 'Khu vực quản lý dành cho Cô Trần Thị Tuyết Nhung'
+                  : 'Cổng tra cứu điểm số & Link ôn tập dành cho Học sinh / Phụ huynh'}
               </p>
             </div>
 
@@ -123,7 +194,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <button
                 type="button"
                 onClick={() => fillQuickDemo('teacher')}
-                className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all ${
+                className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
                   role === 'teacher'
                     ? 'bg-[#0066CC] text-white shadow-sm'
                     : 'text-[#64748B] hover:text-[#17324D]'
@@ -133,8 +204,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               </button>
               <button
                 type="button"
-                onClick={() => fillQuickDemo('student')}
-                className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all ${
+                onClick={() => fillQuickDemo('student', 0)}
+                className={`flex-1 py-2 text-xs md:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
                   role === 'student'
                     ? 'bg-[#0066CC] text-white shadow-sm'
                     : 'text-[#64748B] hover:text-[#17324D]'
@@ -152,113 +223,257 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username */}
-              <div>
-                <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
-                  Tên đăng nhập
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
+              {role === 'teacher' ? (
+                /* ================= TEACHER FORM ================= */
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
+                      Tên đăng nhập
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="VD: nhung.tran hoặc Cô Trần Thị Tuyết Nhung"
+                        className="w-full pl-10 pr-4 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0066CC] transition-all"
+                      />
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="VD: cô Nhung hoặc nhung.tran"
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0066CC] focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
-                  Mật khẩu
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
+                  <div>
+                    <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
+                      Mật khẩu
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full pl-10 pr-11 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0066CC] transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#0066CC] transition-colors cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    className="w-full pl-10 pr-11 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0066CC] focus:border-transparent transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#0066CC] transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+                </>
+              ) : (
+                /* ================= STUDENT FORM ================= */
+                <>
+                  <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-2xl text-xs space-y-1 text-slate-700">
+                    <p className="font-bold text-[#004A99] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0066CC]" />
+                      <span>Đăng nhập không cần nhớ mã số:</span>
+                    </p>
+                    <p className="text-[11px] text-slate-600">
+                      Học sinh chỉ cần chọn <b>Lớp</b> và <b>Tên của em</b> để xem ngay điểm số và link ôn tập.
+                    </p>
+                  </div>
 
-              {/* Remember me & Forgot Password */}
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-[#64748B]">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-[#0066CC] border-slate-300 rounded focus:ring-[#0066CC]"
-                  />
-                  <span>Ghi nhớ đăng nhập</span>
-                </label>
+                  {studentLoginMethod === 'select' ? (
+                    <div className="space-y-3.5">
+                      {/* Step 1: Select Class */}
+                      <div>
+                        <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
+                          1. Chọn Lớp học của em
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <GraduationCap className="w-4 h-4" />
+                          </div>
+                          <select
+                            value={studentSelectClass}
+                            onChange={(e) => {
+                              const newClass = e.target.value;
+                              setStudentSelectClass(newClass);
+                              const firstInClass = students.find((s) => s.className === newClass);
+                              if (firstInClass) setStudentSelectId(firstInClass.id);
+                            }}
+                            className="w-full pl-10 pr-4 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm font-semibold text-[#17324D] outline-none focus:ring-2 focus:ring-[#0066CC] cursor-pointer"
+                          >
+                            {classes.map((c) => (
+                              <option key={c.id} value={c.name}>
+                                Lớp {c.name} {c.isHomeroom ? '(Chủ nhiệm)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowForgotModal(true)}
-                  className="text-xs font-semibold text-[#0066CC] hover:text-[#004A99] hover:underline"
-                >
-                  Quên mật khẩu?
-                </button>
-              </div>
+                      {/* Step 2: Select Student Name */}
+                      <div>
+                        <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
+                          2. Chọn Họ và tên học sinh
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <User className="w-4 h-4" />
+                          </div>
+                          <select
+                            value={studentSelectId}
+                            onChange={(e) => setStudentSelectId(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm font-bold text-[#004A99] outline-none focus:ring-2 focus:ring-[#0066CC] cursor-pointer"
+                          >
+                            {classStudents.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} ({s.gender})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Step 3: Password */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-[#17324D]">
+                            Mật khẩu
+                          </label>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            Mặc định: 123456
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="123456"
+                            className="w-full pl-10 pr-11 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] outline-none focus:ring-2 focus:ring-[#0066CC]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#0066CC] cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <button
+                          type="button"
+                          onClick={() => setStudentLoginMethod('input')}
+                          className="text-xs text-[#0066CC] hover:underline cursor-pointer"
+                        >
+                          Hoặc gõ họ tên trực tiếp →
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Manual input method */
+                    <div className="space-y-3.5">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
+                          Họ và tên học sinh
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <User className="w-4 h-4" />
+                          </div>
+                          <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="VD: Nguyễn Hoàng Nam"
+                            className="w-full pl-10 pr-4 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] outline-none focus:ring-2 focus:ring-[#0066CC]"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[#17324D] mb-1.5">
+                          Mật khẩu
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="123456"
+                            className="w-full pl-10 pr-4 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-sm text-[#17324D] outline-none focus:ring-2 focus:ring-[#0066CC]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <button
+                          type="button"
+                          onClick={() => setStudentLoginMethod('select')}
+                          className="text-xs text-[#0066CC] hover:underline cursor-pointer"
+                        >
+                          ← Quay lại chọn lớp & tên
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3 px-4 bg-[#0066CC] hover:bg-[#004A99] active:scale-[0.99] text-white font-semibold rounded-xl text-sm shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
+                className="w-full mt-3 py-3 px-4 bg-[#0066CC] hover:bg-[#004A99] active:scale-[0.99] text-white font-bold rounded-xl text-sm shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>Đăng nhập hệ thống</span>
+                    <span>
+                      {role === 'teacher'
+                        ? 'Đăng nhập giáo viên'
+                        : 'Vào xem điểm & Link ôn tập'}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
             </form>
 
-            {/* Quick Demo Access Bar */}
+            {/* Quick One-Click Student Login Access */}
             <div className="mt-6 pt-5 border-t border-slate-100">
               <div className="flex items-center justify-between text-xs text-[#64748B] mb-2.5">
-                <span>Tài khoản trải nghiệm nhanh:</span>
+                <span>Tài khoản truy cập nhanh:</span>
                 <span className="text-[11px] text-[#0066CC] font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> An toàn & Bảo mật
+                  <ShieldCheck className="w-3.5 h-3.5" /> 1-chạm vào ngay
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => fillQuickDemo('teacher')}
-                  className="px-3 py-2 text-xs bg-[#EAF4FF] hover:bg-blue-100 text-[#004A99] rounded-lg font-medium text-left border border-blue-200 transition-colors flex flex-col"
+                  className="px-3 py-2 text-xs bg-[#EAF4FF] hover:bg-blue-100 text-[#004A99] rounded-xl font-medium text-left border border-blue-200 transition-colors flex flex-col cursor-pointer"
                 >
                   <span className="font-bold">Cô Trần Thị Tuyết Nhung</span>
-                  <span className="text-[10px] text-blue-600">GVCN 12A1 (Nhấn để điền)</span>
+                  <span className="text-[10px] text-blue-600">Giáo viên Toán (THPT)</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => fillQuickDemo('student')}
-                  className="px-3 py-2 text-xs bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg font-medium text-left border border-slate-200 transition-colors flex flex-col"
+                  onClick={() => fillQuickDemo('student', 0)}
+                  className="px-3 py-2 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl font-medium text-left border border-emerald-200 transition-colors flex flex-col cursor-pointer"
                 >
                   <span className="font-bold">Nguyễn Hoàng Nam</span>
-                  <span className="text-[10px] text-slate-500">Lớp trưởng 12A1</span>
+                  <span className="text-[10px] text-emerald-700">Học sinh Lớp 12A1</span>
                 </button>
               </div>
             </div>
@@ -271,73 +486,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           </div>
         </div>
       </div>
-
-      {/* Forgot Password Modal */}
-      {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-            <h3 className="text-lg font-bold text-[#17324D] mb-1">
-              Khôi phục mật khẩu
-            </h3>
-            <p className="text-xs text-[#64748B] mb-4">
-              Nhập địa chỉ email nội bộ của trường để nhận liên kết đặt lại mật khẩu.
-            </p>
-
-            {forgotSuccess ? (
-              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <p className="text-sm font-semibold text-emerald-800">
-                  Đã gửi email khôi phục!
-                </p>
-                <p className="text-xs text-emerald-700">
-                  Vui lòng kiểm tra hộp thư <b>{forgotEmail}</b> để hoàn tất thiết lập mật khẩu mới.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForgotModal(false);
-                    setForgotSuccess(false);
-                  }}
-                  className="mt-3 w-full py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold"
-                >
-                  Đóng
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleForgotSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-[#17324D] mb-1">
-                    Email trường cấp (@thptnguyenduc.edu.vn)
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="an.nguyen@thptnguyenduc.edu.vn"
-                    className="w-full px-3.5 py-2.5 bg-[#F5F9FF] border border-slate-200 rounded-xl text-xs text-[#17324D] focus:ring-2 focus:ring-[#0066CC] outline-none"
-                  />
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotModal(false)}
-                    className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-semibold text-[#64748B] hover:bg-slate-50"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#0066CC] text-white text-xs font-semibold hover:bg-[#004A99]"
-                  >
-                    Gửi yêu cầu
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -560,7 +560,7 @@ export const ClassesView: React.FC<ClassesViewProps> = ({
                     Lớp {currentClass.name} hiện chưa có học sinh nào.
                   </p>
                   <p className="text-[11px] text-slate-400">
-                    Thầy cô có thể vào mục <b>"Quản lý học sinh"</b> để thêm hoặc nhập học sinh từ file Excel/CSV vào lớp này.
+                    Thầy cô có thể vào mục <b>"Nhập danh sách học sinh"</b> để thêm hoặc nhập học sinh từ file Excel/CSV vào lớp này.
                   </p>
                 </div>
               )}

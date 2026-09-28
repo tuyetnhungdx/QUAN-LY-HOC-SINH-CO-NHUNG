@@ -13,6 +13,7 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { AIAssistantView } from './components/AIAssistantView';
 import { SettingsView } from './components/SettingsView';
 import { ReviewLinksView } from './components/ReviewLinksView';
+import { StudentPortalView } from './components/StudentPortalView';
 import { StudentDetailModal } from './components/StudentDetailModal';
 
 import {
@@ -34,6 +35,10 @@ export default function App() {
 
   const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
     return localStorage.getItem('thpt_nd_role') || 'teacher';
+  });
+
+  const [currentStudentId, setCurrentStudentId] = useState<string | null>(() => {
+    return localStorage.getItem('thpt_nd_student_id') || null;
   });
 
   // Active Navigation Tab
@@ -130,14 +135,19 @@ export default function App() {
   }, [reviewLinks]);
 
   // Handlers
-  const handleLoginSuccess = (role: string, username: string) => {
+  const handleLoginSuccess = (role: string, username: string, studentId?: string) => {
     setIsAuthenticated(true);
     setCurrentUserRole(role);
+    if (studentId) {
+      setCurrentStudentId(studentId);
+      localStorage.setItem('thpt_nd_student_id', studentId);
+    }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('thpt_nd_auth');
+    localStorage.removeItem('thpt_nd_student_id');
   };
 
   const handleAddStudent = (newStudent: Student) => {
