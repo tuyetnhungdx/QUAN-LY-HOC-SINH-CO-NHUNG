@@ -1,0 +1,6 @@
+{
+  "name": "Sổ Theo Dõi Học Tập - THPT Nguyễn Dục",
+  "description": "Hệ thống quản lý và theo dõi tình hình học tập học sinh chuyên nghiệp dành cho giáo viên Trường THPT Nguyễn Dục.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
